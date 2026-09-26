@@ -4,7 +4,7 @@ Static precompiled CSS. No build step, no Tailwind runtime, no CDN. Token names 
 
 ## Themes
 
-The shell page sets `data-theme` on the `<html>` element. Three families — default, `lantern`, `fig` — each in a light and a dark mode:
+The shell page sets `data-theme` on the `<html>` element. Four families — stock (unsuffixed), `lantern`, `fig`, `mono` — each in a light and a dark mode. This fork defaults to `mono` when the reader has never picked a family (no `sf-theme-family` key); picking Stock stores an empty string:
 
 ```html
 <html data-theme="light">          <!-- default family -->

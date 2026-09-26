@@ -242,7 +242,7 @@ body.sf-shell
 │                                        .sf-compact folds both bars onto a single row
 │   ├── .sf-topbar
 │   │   ├── a.sf-brand                   links to "/"
-│   │   ├── .sf-theme-pick               family picker: button.sf-theme-pick-btn per family (data-family="" | "lantern" | "fig", .sf-on on the active one; choice in localStorage sf-theme-family) + button.sf-tuner-toggle (⚙, opens the tuner popup)
+│   │   ├── .sf-theme-pick               family picker: button.sf-theme-pick-btn per family (data-family="mono" | "" | "lantern" | "fig", .sf-on on the active one; choice in localStorage sf-theme-family) + button.sf-tuner-toggle (⚙, opens the tuner popup)
 │   │   ├── .sf-title
 │   │   ├── .sf-wip-marker               visible only with unpublished changes ("unpublished changes")
 │   │   ├── .sf-agent                    agent presence; has .sf-agent-waiting while an await blocks

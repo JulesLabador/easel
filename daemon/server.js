@@ -512,8 +512,8 @@ const GATE_SCRIPT =
   `b.querySelector(".sf-gate-show").onclick=function(){reveal("manual")}})()</script>`
 
 const THEME_SCRIPT =
-  `<script>(function(){var p=new URLSearchParams(location.search).get("theme")` +
-  `||localStorage.getItem("sf-theme-family");` +
+  `<script>(function(){var f=localStorage.getItem("sf-theme-family");` +
+  `var p=new URLSearchParams(location.search).get("theme")||(f===null?"mono":f);` +
   `var m=matchMedia("(prefers-color-scheme: dark)");` +
   `function sync(){var o=localStorage.getItem("sf-theme");` +
   `var mode=o==="light"||o==="dark"?o:m.matches?"dark":"light";` +

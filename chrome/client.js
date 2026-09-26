@@ -89,8 +89,11 @@ const LOOK_STORAGE = 'sf-diagram-look'
 const WRAP_STORAGE = 'sf-wrap-code'
 const WIDTH_STORAGE = 'sf-width'
 const COMPACT_STORAGE = 'sf-chrome-compact'
+// This fork's default family: what a reader who never picked one sees.
+const DEFAULT_FAMILY = 'mono'
 const THEME_FAMILIES = [
-  ['', 'Default'],
+  ['mono', 'Mono'],
+  ['', 'Stock'],
   ['lantern', 'Lantern'],
   ['fig', 'Fig'],
 ]
@@ -105,12 +108,13 @@ function themeMode() {
 const pinnedTheme = () => new URLSearchParams(location.search).get('theme')
 
 function themeFamily() {
-  return pinnedTheme() || localStorage.getItem(FAMILY_STORAGE) || ''
+  const stored = localStorage.getItem(FAMILY_STORAGE)
+  return pinnedTheme() || (stored === null ? DEFAULT_FAMILY : stored)
 }
 
 function setThemeFamily(fam) {
-  if (fam) localStorage.setItem(FAMILY_STORAGE, fam)
-  else localStorage.removeItem(FAMILY_STORAGE)
+  // Stored even when empty: an absent key means "never picked" → DEFAULT_FAMILY.
+  localStorage.setItem(FAMILY_STORAGE, fam)
   syncThemeToggle()
   if (wbReady) postToWhiteboard({ type: WB.themeChanged, theme: wbTheme() })
 }

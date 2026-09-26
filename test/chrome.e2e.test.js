@@ -308,16 +308,16 @@ describe('theme toggle', () => {
 
   test('the full cycle: auto follows the OS, light and dark override it, auto returns', async () => {
     const pg = await openPage('dark')
-    assert.deepEqual(await read(pg), { theme: 'dark', label: '[T]heme: auto', stored: null })
+    assert.deepEqual(await read(pg), { theme: 'mono-dark', label: '[T]heme: auto', stored: null })
 
     await click(pg) // auto -> light, against a dark OS: the override must win
-    assert.deepEqual(await read(pg), { theme: 'light', label: '[T]heme: light', stored: 'light' })
+    assert.deepEqual(await read(pg), { theme: 'mono-light', label: '[T]heme: light', stored: 'light' })
 
     await click(pg)
-    assert.deepEqual(await read(pg), { theme: 'dark', label: '[T]heme: dark', stored: 'dark' })
+    assert.deepEqual(await read(pg), { theme: 'mono-dark', label: '[T]heme: dark', stored: 'dark' })
 
     await click(pg) // back to auto: storage cleared, OS rules again
-    assert.deepEqual(await read(pg), { theme: 'dark', label: '[T]heme: auto', stored: null })
+    assert.deepEqual(await read(pg), { theme: 'mono-dark', label: '[T]heme: auto', stored: null })
     await pg.close()
   })
 
@@ -325,7 +325,7 @@ describe('theme toggle', () => {
     const pg = await openPage('dark')
     await click(pg) // pin light
     await pg.reload({ waitUntil: 'networkidle0' })
-    assert.deepEqual(await read(pg), { theme: 'light', label: '[T]heme: light', stored: 'light' })
+    assert.deepEqual(await read(pg), { theme: 'mono-light', label: '[T]heme: light', stored: 'light' })
 
     // Clean up the profile-wide localStorage for any test that follows.
     await click(pg)
@@ -340,7 +340,7 @@ describe('theme toggle', () => {
     await pg.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' })
     await pg.evaluate('localStorage.setItem("sf-theme", "dark")')
     await pg.reload({ waitUntil: 'domcontentloaded' })
-    assert.equal(await pg.evaluate('document.documentElement.dataset.theme'), 'dark')
+    assert.equal(await pg.evaluate('document.documentElement.dataset.theme'), 'mono-dark')
     // The index paints with system colors, so the override must reach color-scheme
     // or the page stays visually light while claiming dark.
     const [r, g, b] = await pg.evaluate(
@@ -353,10 +353,10 @@ describe('theme toggle', () => {
 
   test('in auto, an OS theme change still lands live', async () => {
     const pg = await openPage('light')
-    assert.equal((await read(pg)).theme, 'light')
+    assert.equal((await read(pg)).theme, 'mono-light')
     await pg.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }])
     // The change event lands on a later task, so poll rather than read once.
-    await pg.waitForFunction('document.documentElement.dataset.theme === "dark"', { timeout: 5000 })
+    await pg.waitForFunction('document.documentElement.dataset.theme === "mono-dark"', { timeout: 5000 })
     await pg.close()
   })
 })
@@ -383,7 +383,7 @@ describe('topbar', () => {
     await pg.keyboard.press('t')
     assert.equal(await pg.evaluate("localStorage.getItem('sf-theme')"), 'light', 't did not pin a mode')
     await pg.keyboard.press('t')
-    assert.equal(await theme(), 'dark', 'second t did not reach dark')
+    assert.equal(await theme(), 'mono-dark', 'second t did not reach dark')
 
     const annotating = () => pg.evaluate("document.querySelector('.sf-annotate-toggle').classList.contains('sf-on')")
     const wasOn = await annotating()
@@ -572,7 +572,14 @@ describe('tuner and family picker', () => {
     assert.match(t2, /^lantern-/, 'mode cycle must stay inside the picked family')
 
     await pg.click('.sf-theme-pick-btn[data-family=""]')
-    assert.match(await theme(), /^(light|dark)$/, 'default must drop the family suffix')
+    assert.match(await theme(), /^(light|dark)$/, 'stock must drop the family suffix')
+    await pg.reload({ waitUntil: 'networkidle0' })
+    assert.match(await theme(), /^(light|dark)$/, 'a stock pick must survive reload, not fall back to mono')
+
+    // Never picked → this fork's default family.
+    await pg.evaluate("localStorage.removeItem('sf-theme-family')")
+    await pg.reload({ waitUntil: 'networkidle0' })
+    assert.match(await theme(), /^mono-(light|dark)$/, 'an unpicked reader must get mono')
     await pg.close()
   })
 })
