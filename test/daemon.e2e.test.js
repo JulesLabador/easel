@@ -216,6 +216,14 @@ test('auto-open: off by default, opt-in opens unwatched boards on wait/publish, 
     const collected = (await papi('GET', `/api/b/${k}/status`)).data
     assert.equal(collected.agentWaiting, false, 'no phantom wait')
     assert.equal(collected.listenerLost, null, 'collecting is a clean exit, not a lost listener')
+
+    const fresh = join(dir, 'fresh.html')
+    writeFileSync(fresh, '<p>fresh</p>')
+    const k2 = (await papi('POST', '/api/open', { file: fresh, title: 'fresh' })).data.key
+    assert.equal((await openedAtLeast(before + 3)).at(-1), `${base}/b/${k2}`, 'creating a board opens it')
+    await papi('POST', '/api/open', { file: fresh })
+    await new Promise((r) => setTimeout(r, 300))
+    assert.equal(opened().length, before + 3, 're-opening an existing board is not a new board')
   } finally {
     d.kill()
   }
