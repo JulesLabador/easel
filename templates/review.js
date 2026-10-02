@@ -91,6 +91,7 @@ export function render(data) {
         prompt: requireString(d.question, `${path}.question`),
         help: d.context,
         options: requireArray(d.options, `${path}.options`),
+        reason: d.reason,
       }),
       '</div>',
     ].filter(Boolean).join('\n')
@@ -104,6 +105,7 @@ export function render(data) {
       prompt: requireString(v.question, `${path}.question`),
       help: v.context,
       options: requireArray(v.options ?? ['yes', 'no'], `${path}.options`),
+      reason: v.reason,
     })
   }
 

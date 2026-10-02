@@ -206,8 +206,10 @@ export function badge(label, style, path, title) {
 }
 
 /** Widget markup only — client.js owns behavior. Options are native buttons so
-    the annotation layer cannot swallow the click. */
-export function widget({ type, id, prompt, help, options, compact }) {
+    the annotation layer cannot swallow the click. `reason` (a placeholder
+    string, or true for the default) asks the chrome to add a "why" box whose
+    text is delivered with the pick; the box itself is chrome, never authored. */
+export function widget({ type, id, prompt, help, options, compact, reason }) {
   requireString(type, 'widget.type')
   requireString(id, 'widget.id')
   const allowed = ['vote', 'decision', 'approve', 'rating']
@@ -224,6 +226,8 @@ export function widget({ type, id, prompt, help, options, compact }) {
     return { value, label, basis: basis ?? null, recommended: typeof o !== 'string' && o.recommended === true }
   })
   if (normalized.filter((o) => o.recommended).length > 1) fail(`widget[${id}]: only one option can be recommended`)
+  if (reason !== undefined && reason !== null && reason !== false && reason !== true) requireString(reason, `widget[${id}].reason`)
+  const reasonAttr = reason === true ? ' data-widget-reason="Why?"' : typeof reason === 'string' ? ` data-widget-reason="${attr(reason)}"` : ''
 
   const buttons = normalized
     .map((o) => `<button type="button" data-option="${attr(o.value)}">${esc(o.label)}</button>`)
@@ -237,7 +241,7 @@ export function widget({ type, id, prompt, help, options, compact }) {
     : ''
 
   return [
-    `<div data-widget="${attr(type)}" data-widget-id="${attr(id)}"${compact ? ' class="sd-widget-compact"' : ''}>`,
+    `<div data-widget="${attr(type)}" data-widget-id="${attr(id)}"${reasonAttr}${compact ? ' class="sd-widget-compact"' : ''}>`,
     prompt ? `<div class="sd-widget-prompt">${esc(prompt)}</div>` : '',
     help ? `<div class="sd-widget-help">${markdown(help)}</div>` : '',
     basis,

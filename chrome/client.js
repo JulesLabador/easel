@@ -496,6 +496,8 @@ function render() {
   renderAudit(d.audit)
   resolveGate(d.audit)
   setAgentWaiting(d.agentWaiting)
+  // Before the ended check (it disables the boxes) and the widget marking (it fills them).
+  attachReasonBoxes()
   // A tab that arrives after the end never sees the `end` event, so status is
   // the only thing that tells it. The server refuses the writes either way.
   // Belt-and-braces, deliberately untested: no second render of an ended
@@ -529,8 +531,8 @@ function markPriorVerdicts(d) {
     if (!widget) continue
     const tag = document.createElement('span')
     tag.className = 'sf-prior'
-    tag.textContent = `r${item.round}: ${item.value}`
-    tag.title = `your verdict on round ${item.round}`
+    tag.textContent = `r${item.round}: ${item.value}${item.comment ? ` — ${item.comment.length > 80 ? `${item.comment.slice(0, 79)}…` : item.comment}` : ''}`
+    tag.title = item.comment ? `your verdict on round ${item.round}: ${item.comment}` : `your verdict on round ${item.round}`
     widget.querySelector('.sd-widget-options')?.appendChild(tag)
     // The earlier choice also shows as the pressed button; the buttons stay
     // live, so a click on this round records a new answer.
@@ -611,6 +613,11 @@ function markRecordedWidgets(items) {
     w.classList.remove('sf-recorded')
     for (const opt of w.querySelectorAll('[data-option]')) opt.removeAttribute('aria-pressed')
   }
+  // Only text that came from a draft is cleared; a reason typed before any pick
+  // is the reader's and survives the refresh.
+  for (const box of CONTENT.querySelectorAll('[data-widget] > .sf-reason[data-synced]')) {
+    if (box !== document.activeElement) { box.value = ''; delete box.dataset.synced }
+  }
   const widgetItems = items.filter((i) => i.kind === 'widget')
   widgetItems.sort((a, b) => (a.state === 'draft' ? 1 : 0) - (b.state === 'draft' ? 1 : 0))
   for (const item of widgetItems) {
@@ -620,6 +627,33 @@ function markRecordedWidgets(items) {
     for (const opt of widget.querySelectorAll('[data-option]')) {
       opt.setAttribute('aria-pressed', String(opt.dataset.option === item.value))
     }
+    const box = widget.querySelector(':scope > .sf-reason')
+    if (box && box !== document.activeElement) {
+      box.value = item.comment ?? ''
+      box.dataset.synced = ''
+    }
+  }
+}
+
+// A widget authored with data-widget-reason gets a "why" box. Its text rides
+// the widget draft as `comment`, so a verdict and its reason reach the agent
+// together. Chrome-owned: the publish sanitizer never lets a textarea through.
+function attachReasonBoxes() {
+  for (const widget of CONTENT.querySelectorAll('[data-widget][data-widget-reason]')) {
+    if (widget.querySelector(':scope > .sf-reason')) continue
+    const box = el('textarea', 'sf-reason')
+    box.rows = 2
+    box.placeholder = widget.dataset.widgetReason
+    box.setAttribute('aria-label', `${widget.dataset.widgetId}: reason`)
+    box.addEventListener('input', () => delete box.dataset.synced)
+    // change fires on blur, before a Send click lands, and recordWidget joins
+    // the same mutation chain as Send, so the reason is never left behind.
+    box.addEventListener('change', () => {
+      const chosen = widget.querySelector('[data-option][aria-pressed="true"]')
+      if (chosen) recordWidget(widget, chosen)
+      else toast('Pick an option: the reason is sent with it')
+    })
+    widget.appendChild(box)
   }
 }
 
@@ -761,7 +795,7 @@ function renderQueue(items) {
     }
     row.appendChild(el('div', 'sf-item-excerpt', item.anchor?.quote || item.excerpt || ''))
     if (item.kind === 'widget') {
-      row.appendChild(el('div', 'sf-item-comment', `${item.widgetId}: ${item.value}`))
+      row.appendChild(el('div', 'sf-item-comment', `${item.widgetId}: ${item.value}${item.comment ? ` — ${item.comment}` : ''}`))
     } else if (item.comment) {
       row.appendChild(el('div', 'sf-item-comment', item.comment))
     }
@@ -1062,7 +1096,7 @@ function closePopover() {
 }
 
 // Chrome-injected controls inside content act, never annotate.
-const CHROME_CONTROLS = '.sf-wb-open, .sf-diagram-look, .sf-wrap-toggle'
+const CHROME_CONTROLS = '.sf-wb-open, .sf-diagram-look, .sf-wrap-toggle, .sf-reason'
 
 CONTENT.addEventListener('mouseover', (e) => {
   if (!state.annotating || popover) return
@@ -1294,6 +1328,7 @@ async function recordWidget(widget, option) {
         widgetId,
         value,
         sid,
+        comment: widget.querySelector(':scope > .sf-reason')?.value ?? null,
       })
     )
   } catch (err) {
@@ -1377,6 +1412,7 @@ function setEnded() {
    source rather than relying on the delegated listener to opt out. */
 function disableContentControls() {
   for (const b of CONTENT.querySelectorAll('[data-widget] [data-option]')) b.disabled = true
+  for (const box of CONTENT.querySelectorAll('[data-widget] .sf-reason')) box.disabled = true
 }
 
 function setStatus(state) {

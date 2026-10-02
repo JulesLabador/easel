@@ -1104,6 +1104,9 @@ const handlers = {
     const { clientId, round, widgetId, value, sid } = body
     if (!clientId) return json(res, 400, { error: 'clientId required' })
     if (!widgetId || value == null) return json(res, 400, { error: 'widgetId and value required' })
+    if (body.comment != null && typeof body.comment !== 'string') return json(res, 400, { error: 'comment must be a string' })
+    // The reason typed into a widget's "why" box rides the pick; blank clears it.
+    const comment = body.comment?.trim().slice(0, 4000) || null
     const roundRow = round != null ? store.round(board.key, round) : store.lastRound(board.key)
     if (!roundRow) return json(res, 404, { error: `no such round: ${round}` })
     const context = sid ? contextForSid(roundRow?.html ?? '', sid) : null
@@ -1116,6 +1119,7 @@ const handlers = {
       context_json: context ? JSON.stringify(context) : null,
       widget_id: widgetId,
       widget_value: String(value),
+      comment,
     })
     broadcast(board.key, 'feedback', { id: item.id })
     json(res, 200, item)

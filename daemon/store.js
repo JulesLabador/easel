@@ -73,7 +73,7 @@ export function createStore(db = openDb()) {
        AND widget_id = ? AND client_id = ?`
     ),
     updateWidgetDraft: db.prepare(
-      `UPDATE feedback SET widget_value = ?, round_seq = ?, sid = ?, excerpt = ?, context_json = ?, created_at = ? WHERE id = ?`
+      `UPDATE feedback SET widget_value = ?, comment = ?, round_seq = ?, sid = ?, excerpt = ?, context_json = ?, created_at = ? WHERE id = ?`
     ),
     maxFeedbackId: db.prepare(`SELECT COALESCE(MAX(id), 0) AS m FROM feedback`),
     renumberAndSubmit: db.prepare(
@@ -156,7 +156,9 @@ export function createStore(db = openDb()) {
           excerpt: row.excerpt,
           context: parseJson(row.context_json) ?? undefined,
         }),
-    ...(row.kind === 'widget' ? { widgetId: row.widget_id, value: row.widget_value } : {}),
+    ...(row.kind === 'widget'
+      ? { widgetId: row.widget_id, value: row.widget_value, ...(row.comment ? { comment: row.comment } : {}) }
+      : {}),
     ...(row.kind === 'annotation' ? { comment: row.comment } : {}),
     ...(row.kind === 'whiteboard' ? { comment: row.comment, whiteboard: parseJson(row.payload_json) } : {}),
     createdAt: row.created_at,
@@ -247,7 +249,7 @@ export function createStore(db = openDb()) {
     upsertWidgetDraft(fields) {
       const existing = q.widgetDraft.get(fields.surface_key, fields.widget_id, fields.client_id)
       if (!existing) return this.addFeedback({ ...fields, kind: 'widget', state: 'draft' })
-      q.updateWidgetDraft.run(fields.widget_value, fields.round_seq, fields.sid, fields.excerpt, fields.context_json ?? null, now(), existing.id)
+      q.updateWidgetDraft.run(fields.widget_value, fields.comment ?? null, fields.round_seq, fields.sid, fields.excerpt, fields.context_json ?? null, now(), existing.id)
       q.touchBoard.run(now(), fields.surface_key)
       return feedbackItem(q.feedbackById.get(existing.id))
     },

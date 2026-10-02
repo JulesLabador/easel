@@ -695,3 +695,42 @@ describe('annotating inside a widget', () => {
     await pg.close()
   })
 })
+
+/* A reason-enabled widget carries a chrome-owned "why" box: typing in it never
+   annotates, and its text rides the pick as the widget draft's comment. */
+describe('widget reason box', () => {
+  const PAGE = page('widget-reason.html', '<h1>widget reason</h1><div data-widget="vote" data-widget-id="w1" data-widget-reason="why?"><div class="sd-widget-prompt">ship it?</div><div class="sd-widget-options"><button type="button" data-option="ship">ship</button><button type="button" data-option="cut">cut</button></div></div>')
+  let key
+
+  before(async () => { key = await open(PAGE, 'widget reason') })
+
+  test('the box types without annotating and its text rides the pick', async () => {
+    const pg = await browser.newPage()
+    await pg.goto(`${BASE}/b/${key}`, { waitUntil: 'networkidle0' })
+    if (!(await pg.evaluate("document.querySelector('.sf-annotate-toggle').classList.contains('sf-on')"))) {
+      await pg.click('.sf-annotate-toggle')
+    }
+    assert.equal(await pg.evaluate("document.querySelector('#sf-content [data-widget] > .sf-reason')?.placeholder"), 'why?', 'no reason box was attached')
+
+    await pg.click('#sf-content [data-option="ship"]')
+    await pg.click('#sf-content .sf-reason')
+    assert.equal(await pg.evaluate("!!document.querySelector('.sf-popover')"), false, 'clicking the box must not open an annotation popover')
+    await pg.keyboard.type('the hook states the outcome')
+    await pg.evaluate("document.querySelector('#sf-content .sf-reason').blur()")
+
+    const clientId = await pg.evaluate("localStorage.getItem('sf-client-id')")
+    let draft
+    for (let i = 0; i < 40 && !draft?.comment; i++) {
+      const state = (await api('GET', `/api/b/${key}/state?clientId=${clientId}`)).data
+      draft = state.feedback.find((f) => f.kind === 'widget' && f.widgetId === 'w1' && f.state === 'draft')
+      if (!draft?.comment) await new Promise((r) => setTimeout(r, 50))
+    }
+    assert.equal(draft?.value, 'ship')
+    assert.equal(draft?.comment, 'the hook states the outcome', 'the reason did not reach the widget draft')
+
+    // A reload restores the box from the draft.
+    await pg.reload({ waitUntil: 'networkidle0' })
+    assert.equal(await pg.evaluate("document.querySelector('#sf-content .sf-reason')?.value"), 'the hook states the outcome')
+    await pg.close()
+  })
+})

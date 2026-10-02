@@ -160,7 +160,7 @@ Once a board is no longer open, `POST /feedback`, `POST /send` and `POST /widget
 | `POST /api/b/:key/feedback` | `{"clientId", "round", "anchor": {"sid", "quote?", "prefix?", "suffix?", "x?", "y?"}, "comment"}` | The created item, `state: "draft"`. Called when a comment is **queued** (not per keystroke). `x`/`y` (island pins) are clamped to 0–1 and rounded to 4 dp; one without the other is dropped. |
 | `DELETE /api/b/:key/feedback/:id` | — | `{"deleted": true}`. Removes a draft from the queue. Drafts only; submitted items are immutable. |
 | `POST /api/b/:key/send` | `{"clientId"}` | `{"submitted": [42, 43]}`. Flips that client's drafts to `submitted`, stamps `submittedAt`, wakes `await`. |
-| `POST /api/b/:key/widget` | `{"clientId" (required), "round", "widgetId", "value", "sid"}` | The live draft for (widget, client) — created on first click, value-replaced in place on a reclick (same `id`). `state: "draft"`; `await` receives nothing until `/send` submits it. Removing it is the ordinary draft `DELETE` above. |
+| `POST /api/b/:key/widget` | `{"clientId" (required), "round", "widgetId", "value", "sid", "comment"}` | The live draft for (widget, client) — created on first click, value-replaced in place on a reclick (same `id`). `comment` is the reason-box text (string, trimmed, ≤ 4000 chars; blank clears it) and comes back on the item only when set. `state: "draft"`; `await` receives nothing until `/send` submits it. Removing it is the ordinary draft `DELETE` above. |
 
 ### Agent-facing routes (back the CLI)
 
@@ -328,4 +328,4 @@ body.sf-shell
 
 ### Widget protocol
 
-Template emits `data-widget="vote|decision|approve|rating"`, unique `data-widget-id`, options as descendants with `data-option="<value>"`. client.js binds click on `[data-option]` → `POST /api/b/:key/widget` (queues a draft, reclick replaces it) → adds `sf-recorded` to the widget node. Everything not inside a `[data-widget]` is annotatable by the generic layer.
+Template emits `data-widget="vote|decision|approve|rating"`, unique `data-widget-id`, options as descendants with `data-option="<value>"`. client.js binds click on `[data-option]` → `POST /api/b/:key/widget` (queues a draft, reclick replaces it) → adds `sf-recorded` to the widget node. A widget with `data-widget-reason="<placeholder>"` also gets a chrome-owned `<textarea class="sf-reason">` (never authored: the sanitizer drops textareas); its text is sent as the draft's `comment` with the pick and re-sent on change. Everything not inside a `[data-widget]` is annotatable by the generic layer.

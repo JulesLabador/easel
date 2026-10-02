@@ -286,6 +286,21 @@ describe('widgets', () => {
     assert.match(html, /<p>&lt;b&gt;a&lt;\/b&gt; <strong>b<\/strong><\/p>/)
   })
 
+  test('reason asks the chrome for a why box; true uses the default prompt', () => {
+    assert.match(widget({ type: 'vote', id: 'w1', prompt: 'Ship?', options: ['yes'], reason: 'Why? (goes in the log)' }), /data-widget-reason="Why\? \(goes in the log\)"/)
+    assert.match(widget({ type: 'vote', id: 'w1', prompt: 'Ship?', options: ['yes'], reason: true }), /data-widget-reason="Why\?"/)
+    assert.doesNotMatch(widget({ type: 'vote', id: 'w1', prompt: 'Ship?', options: ['yes'] }), /data-widget-reason/)
+    assert.doesNotMatch(widget({ type: 'vote', id: 'w1', prompt: 'Ship?', options: ['yes'], reason: 'x' }), /<textarea/, 'the box is chrome, never authored markup')
+    assert.throws(() => widget({ type: 'vote', id: 'w1', prompt: 'Ship?', options: ['yes'], reason: 7 }), TemplateError)
+  })
+
+  test('review votes and decisions pass reason through to the widget', () => {
+    const html = review.render({ title: 'T', sections: [{ heading: 'H', body: 'b', votes: [{ id: 'v1', question: 'Ship?', options: ['ship', 'cut'], reason: 'Why?' }],
+      decisions: [{ id: 'd1', question: 'Pick?', options: ['a', 'b'], reason: true }] }] })
+    assert.match(html, /data-widget-id="v1" data-widget-reason="Why\?"/)
+    assert.match(html, /data-widget-id="d1" data-widget-reason="Why\?"/)
+  })
+
   test('rejects an unknown widget type and empty options', () => {
     assert.throws(() => widget({ type: 'slider', id: 'w', prompt: 'p', options: ['a'] }), TemplateError)
     assert.throws(() => widget({ type: 'vote', id: 'w', prompt: 'p', options: [] }), TemplateError)

@@ -99,3 +99,30 @@ test('a widget click without clientId is rejected — a draft must belong to a c
   const { status } = await api('POST', `/api/b/${key}/widget`, { widgetId: 'theme', value: 'dark' })
   assert.equal(status, 400)
 })
+
+test('a reason rides the widget draft as comment, and a reclick replaces it', async () => {
+  const first = await api('POST', `/api/b/${key}/widget`, { clientId: 'c3', widgetId: 'theme', value: 'dark', comment: '  too dim at night  ' })
+  assert.equal(first.status, 200)
+  assert.equal(first.data.comment, 'too dim at night', 'the reason was not stored trimmed')
+  const second = await api('POST', `/api/b/${key}/widget`, { clientId: 'c3', widgetId: 'theme', value: 'light', comment: 'reads better' })
+  assert.equal(second.data.id, first.data.id)
+  assert.equal(second.data.value, 'light')
+  assert.equal(second.data.comment, 'reads better')
+  const cleared = await api('POST', `/api/b/${key}/widget`, { clientId: 'c3', widgetId: 'theme', value: 'light', comment: '   ' })
+  assert.equal(cleared.data.comment, undefined, 'a blank reason should clear the stored one')
+  await api('DELETE', `/api/b/${key}/feedback/${first.data.id}`)
+})
+
+test('a non-string reason is rejected', async () => {
+  const { status } = await api('POST', `/api/b/${key}/widget`, { clientId: 'c3', widgetId: 'theme', value: 'dark', comment: 42 })
+  assert.equal(status, 400)
+})
+
+test('Send delivers the reason to await alongside the value', async () => {
+  await api('POST', `/api/b/${key}/widget`, { clientId: 'c4', widgetId: 'ship', value: 'yes', comment: 'hook states the outcome' })
+  await api('POST', `/api/b/${key}/send`, { clientId: 'c4' })
+  const got = await api('POST', `/api/b/${key}/await`, { agent: 'wd-agent', timeoutS: 5 })
+  const item = got.data.items.find((i) => i.kind === 'widget' && i.widgetId === 'ship' && i.value === 'yes' && i.comment)
+  assert.ok(item, 'the submitted widget item lost its reason on the way to await')
+  assert.equal(item.comment, 'hook states the outcome')
+})

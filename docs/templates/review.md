@@ -47,7 +47,8 @@ easel open --template review --data plan.json --title "Retry budget"
           "basis": "string",         // one line: what picking it costs or buys; renders as a bullet above the buttons
           "recommended": true }      // at most one; renders a mark on that bullet
       ],
-      "detail": "string"             // optional, markdown shown above the widget — evidence, not the per-option argument
+      "detail": "string",            // optional, markdown shown above the widget — evidence, not the per-option argument
+      "reason": "string|true"        // optional — adds a "why" box under the buttons; the string is its placeholder (true = "Why?")
     }
   ],
 
@@ -57,7 +58,8 @@ easel open --template review --data plan.json --title "Retry budget"
       "question": "string",          // required
       "type": "vote|approve",        // optional, default "vote"
       "options": ["yes", "no"],      // optional, default ["yes","no"]
-      "context": "string"            // optional
+      "context": "string",           // optional
+      "reason": "string|true"        // optional — same "why" box as decisions
     }
   ]
 }
@@ -96,6 +98,8 @@ Row width is the header's: **a short row is padded with empty cells, and a long 
 Alignment is carried on a class, not a `style` attribute. The publish sanitizer strips `style`, so any hand-authored HTML that aligns via inline style will lose it — use the same `sd-align-left` / `sd-align-center` / `sd-align-right` classes.
 
 ## Behavior
+
+**Reason boxes.** A decision or vote with `reason` gets a text box under its buttons. What the reader types there is sent with their pick, as the widget item's `comment` (see `listening.md`). Use it whenever the *why* behind a verdict is what you need to learn from, e.g. approve/reject on drafts you'll log. A reason is optional to the reader; a widget with none still records the pick.
 
 Each decision renders its options' `basis` lines as a list directly above the buttons, the recommended one marked, so the argument for an option never has to live on the button. `detail` renders above that, for the evidence the options rest on. A widget the reader answered on an earlier round opens with that choice shown pressed and the buttons live — a new click records a new answer.
 
