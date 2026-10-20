@@ -498,6 +498,7 @@ function render() {
   setAgentWaiting(d.agentWaiting)
   // Before the ended check (it disables the boxes) and the widget marking (it fills them).
   attachReasonBoxes()
+  attachCopyButtons()
   // A tab that arrives after the end never sees the `end` event, so status is
   // the only thing that tells it. The server refuses the writes either way.
   // Belt-and-braces, deliberately untested: no second render of an ended
@@ -654,6 +655,30 @@ function attachReasonBoxes() {
       else toast('Pick an option: the reason is sent with it')
     })
     widget.appendChild(box)
+  }
+}
+
+// An element authored with data-copy gets a Copy chip that puts its text on the
+// clipboard, minus the chrome's own chips — for fields the reader pastes elsewhere.
+function attachCopyButtons() {
+  for (const node of CONTENT.querySelectorAll('[data-copy]')) {
+    if (node.querySelector(':scope > .sf-copy')) continue
+    node.classList.add('sf-copyable')
+    const button = el('button', 'sf-copy', 'Copy')
+    button.type = 'button'
+    button.title = node.dataset.copy ? `Copy ${node.dataset.copy}` : 'Copy this text'
+    button.onclick = async () => {
+      const clone = node.cloneNode(true)
+      for (const chip of clone.querySelectorAll('.sf-copy, .sf-wrap-toggle, .sf-wrap-mark')) chip.remove()
+      try {
+        await navigator.clipboard.writeText(clone.textContent.trim())
+        button.textContent = 'Copied'
+        setTimeout(() => { button.textContent = 'Copy' }, 1500)
+      } catch {
+        toast('Copy failed: the browser refused clipboard access')
+      }
+    }
+    node.appendChild(button)
   }
 }
 
@@ -1096,7 +1121,7 @@ function closePopover() {
 }
 
 // Chrome-injected controls inside content act, never annotate.
-const CHROME_CONTROLS = '.sf-wb-open, .sf-diagram-look, .sf-wrap-toggle, .sf-reason'
+const CHROME_CONTROLS = '.sf-wb-open, .sf-diagram-look, .sf-wrap-toggle, .sf-reason, .sf-copy'
 
 CONTENT.addEventListener('mouseover', (e) => {
   if (!state.annotating || popover) return

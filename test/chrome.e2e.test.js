@@ -734,3 +734,29 @@ describe('widget reason box', () => {
     await pg.close()
   })
 })
+
+/* A data-copy element carries a Copy chip: clicking it puts the element's own
+   text on the clipboard, never the chip's label, and never annotates. */
+describe('copy chip', () => {
+  const PAGE = page('copy-chip.html', '<h1>copy chip</h1><pre data-copy="description">Line one.\n\nLine two.</pre>')
+  let key
+
+  before(async () => { key = await open(PAGE, 'copy chip') })
+
+  test('the chip copies the field text and opens no annotation', async () => {
+    const pg = await browser.newPage()
+    await pg.evaluateOnNewDocument(() => {
+      Object.defineProperty(navigator, 'clipboard', { value: { writeText: async (t) => { window.__copied = t } } })
+    })
+    await pg.goto(`${BASE}/b/${key}`, { waitUntil: 'networkidle0' })
+    if (!(await pg.evaluate("document.querySelector('.sf-annotate-toggle').classList.contains('sf-on')"))) {
+      await pg.click('.sf-annotate-toggle')
+    }
+    assert.equal(await pg.evaluate("document.querySelector('#sf-content [data-copy] > .sf-copy')?.title"), 'Copy description', 'no copy chip was attached')
+    await pg.click('#sf-content .sf-copy')
+    await pg.waitForFunction('window.__copied !== undefined')
+    assert.equal(await pg.evaluate('window.__copied'), 'Line one.\n\nLine two.')
+    assert.equal(await pg.evaluate("!!document.querySelector('.sf-popover')"), false, 'clicking the chip must not open an annotation popover')
+    await pg.close()
+  })
+})

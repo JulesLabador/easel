@@ -234,6 +234,8 @@ To collect structured input, use the widget protocol rather than rolling your ow
 
 The daemon binds the click and queues the value as a draft; Send delivers it.
 
+To let the reader paste a field elsewhere (a title, a description, a command), mark it `data-copy`: the chrome adds a Copy chip that puts the element's text on the clipboard. The value, if any, names the field in the chip's tooltip — `<pre data-copy="description">…</pre>`.
+
 ## Diagrams
 
 Put mermaid source in `<pre class="mermaid">…</pre>`. It is rendered to inline SVG at publish time, so there is no client-side renderer to configure and no startup race. Write `<br/>` normally in node labels — the source is entity-decoded before rendering, and the sketch and whiteboard render it as a line break. Unstyled diagrams render every node one uniform colour — when the nodes differ in kind, paint them with the palette in `mermaid.md`'s authoring section.

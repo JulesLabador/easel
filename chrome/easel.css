@@ -469,6 +469,27 @@ body.sf-shell {
   border-color: var(--color-primary);
 }
 
+/* The Copy chip a data-copy element carries (client.js attachCopyButtons). */
+.sf-copyable { position: relative; padding-right: 72px; }
+.sf-copy {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 560;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--color-base-100);
+  color: var(--color-muted-content);
+  cursor: pointer;
+  user-select: none;
+}
+.sf-copy:hover, .sf-copy:focus-visible { color: var(--color-base-content); border-color: var(--color-primary); }
+/* A wide code block carries both chips; Wrap steps left of Copy. */
+.sf-copyable > .sf-wrap-toggle { right: 72px; }
+
 /* ------------------------------------------------------------------ diff -- */
 
 /* Tints run edge to edge, so the padding lives on the lines, not the block. */
@@ -2232,7 +2253,7 @@ button.sf-end-session.sf-armed { border-color: var(--color-error); color: var(--
 }
 
 @media print {
-  .sf-wb-open, .sf-diagram-look, .sf-wrap-toggle, .sf-wb-overlay { display: none; }
+  .sf-wb-open, .sf-diagram-look, .sf-wrap-toggle, .sf-copy, .sf-wb-overlay { display: none; }
 }
 
 /* print ----------------------------------------------------------------- */
