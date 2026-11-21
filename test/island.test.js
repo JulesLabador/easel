@@ -114,6 +114,7 @@ test('island-frame serves the verbatim content under a no-network, no-script-exc
   assert.match(csp, /default-src 'none'/)
   assert.match(csp, /style-src 'unsafe-inline'/)
   assert.match(csp, /script-src 'nonce-/)
+  assert.match(csp, /media-src data:/) // an embedded <audio>/<video> plays
   const body = await res.text()
   assert.ok(body.includes(ISLAND_INNER), 'island html must arrive verbatim')
   assert.match(body, /easelIsland/)

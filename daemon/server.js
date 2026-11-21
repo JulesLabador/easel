@@ -1297,7 +1297,7 @@ const handlers = {
       // Island html is author-verbatim: full CSS freedom, zero script (only the
       // nonced resize shim runs), zero network (data: assets only).
       'Content-Security-Policy':
-        `default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; ` +
+        `default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; media-src data:; ` +
         `script-src 'nonce-${nonce}'; base-uri 'none'; form-action 'none'`,
       'Cache-Control': 'no-store',
     })
