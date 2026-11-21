@@ -3,7 +3,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { normalizeSkeleton } from '../render/diagram-palette.js'
+import { normalizeSkeleton, DIAGRAM_FONT } from '../render/diagram-palette.js'
 
 test('an unstyled diagram gets filled shapes, and only shapes', () => {
   const out = normalizeSkeleton([
@@ -30,4 +30,17 @@ test('a <br/> label becomes a real line break', () => {
   const out = normalizeSkeleton([{ type: 'text', text: 'first<br/>second' }, { type: 'rectangle', label: { text: 'a<BR>b' } }])
   assert.equal(out[0].text, 'first\nsecond')
   assert.equal(out[1].label.text, 'a\nb')
+})
+
+test('labels use the diagram font, styled or not', () => {
+  for (const backgroundColor of [undefined, '#fdd']) {
+    const out = normalizeSkeleton([
+      { type: 'text', text: 'free' },
+      { type: 'rectangle', backgroundColor, label: { text: 'node' } },
+      { type: 'arrow', label: { text: 'edge' } },
+    ])
+    assert.equal(out[0].fontFamily, DIAGRAM_FONT.id)
+    assert.equal(out[1].label.fontFamily, DIAGRAM_FONT.id)
+    assert.equal(out[2].label.fontFamily, DIAGRAM_FONT.id)
+  }
 })

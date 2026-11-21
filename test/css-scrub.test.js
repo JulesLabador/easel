@@ -102,7 +102,7 @@ describe('what real diagrams emit still survives', () => {
     assert.match(stored('<svg width="1" height="1"><rect fill="url(#grad)"></rect></svg>'), /url\(#grad\)/)
   })
   test('the embedded woff2 face is untouched', () => {
-    const face = `@font-face { font-family: Excalifont; src: url(data:font/woff2;base64,${'A'.repeat(80)}); }`
+    const face = `@font-face { font-family: Nunito; src: url(data:font/woff2;base64,${'A'.repeat(80)}); }`
     assert.match(stored(`<svg width="1" height="1"><style>${face}</style></svg>`), /data:font\/woff2;base64,A{80}/)
   })
   test('a plain external url still becomes none', () => {
@@ -119,7 +119,7 @@ describe('scrubbing is a no-op on ordinary diagram markup', () => {
   const svg =
     '<svg width="10" height="10" viewBox="0 0 10 10" role="graphics-document" aria-roledescription="flowchart">' +
     '<g transform="translate(4.5, 2) rotate(45)"><path d="M0,0 L10,10 C1,2 3,4 5,6"></path>' +
-    '<text font-family="Excalifont, \'Segoe UI\', sans-serif" aria-label="it\'s fine">x</text>' +
+    '<text font-family="Nunito, \'Segoe UI\', sans-serif" aria-label="it\'s fine">x</text>' +
     '<rect fill="url(#g)" stroke="rgb(1, 2, 3)" style="opacity: calc(1 - 0.5)"></rect></g></svg>'
 
   test('geometry, transforms and apostrophes come through unchanged', () => {

@@ -6,7 +6,7 @@ import { parseMermaidToExcalidraw } from '@excalidraw/mermaid-to-excalidraw'
 import { createElement, useEffect, useState, useRef } from 'react'
 import { createRoot } from 'react-dom/client'
 import { WB } from './whiteboard-protocol.js'
-import { normalizeSkeleton } from '../render/diagram-palette.js'
+import { normalizeSkeleton, DIAGRAM_FONT } from '../render/diagram-palette.js'
 
 // EXCALIDRAW_ASSET_PATH is set by the frame page, not here: excalidraw registers
 // its fonts at module init, which import hoisting runs before this file's body.
@@ -43,7 +43,7 @@ function summarize(elements) {
 // clip. The text is passed because the face is split into unicode subsets.
 async function drawingFontReady(text) {
   try {
-    await document.fonts.load('20px Excalifont', String(text || ''))
+    await document.fonts.load(`20px ${DIAGRAM_FONT.name}`, String(text || ''))
   } catch {}
   await document.fonts.ready
 }

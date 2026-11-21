@@ -58,6 +58,7 @@ test('no converted label paints wider than its own box', SLOW, async () => {
   const out = await converter.convert(SOURCE)
   assert.equal(out.ok, true, `conversion must succeed: ${out.message || ''}`)
 
+  assert.match(out.light, /font-family="Nunito-[0-9a-f]{8}/, 'labels must render in the diagram font')
   const spills = await labelOverflows(out.light)
   assert.deepEqual(spills, [], `labels must fit their boxes, but these spilled: ${JSON.stringify(spills)}`)
 })

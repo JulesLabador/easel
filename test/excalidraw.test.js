@@ -298,9 +298,9 @@ describe('excalidraw conversion at publish', () => {
   })
 
   test('font families are scoped per diagram so subsets cannot shadow each other', () => {
-    const a = scopeFontFamily('font-family: Excalifont; src: url(x)', 'diagram A')
-    const b = scopeFontFamily('font-family: Excalifont; src: url(x)', 'diagram B')
-    assert.match(a, /Excalifont-[0-9a-f]{8}/)
+    const a = scopeFontFamily('font-family: Nunito; src: url(x)', 'diagram A')
+    const b = scopeFontFamily('font-family: Nunito; src: url(x)', 'diagram B')
+    assert.match(a, /Nunito-[0-9a-f]{8}/)
     assert.notEqual(a, b)
   })
 })

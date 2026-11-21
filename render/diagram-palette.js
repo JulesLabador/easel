@@ -9,6 +9,19 @@ const FILLABLE = new Set(['rectangle', 'ellipse', 'diamond'])
 
 const hasColor = (el) => Boolean(el.backgroundColor || el.strokeColor)
 
+/** Label font: excalidraw's built-in clean sans instead of the hand-drawn default.
+    The id is FONT_FAMILY.Nunito in @excalidraw/excalidraw. */
+export const DIAGRAM_FONT = { name: 'Nunito', id: 6 }
+
+/** Set on the skeleton so convertToExcalidrawElements measures with the same face
+    the export paints. */
+function applyFont(elements) {
+  for (const el of elements) {
+    if (el.type === 'text') el.fontFamily = DIAGRAM_FONT.id
+    if (el.label) el.label.fontFamily = DIAGRAM_FONT.id
+  }
+}
+
 /** Excalidraw text has no markup, so a <br/> label arrives literal; the node is
     already sized for the extra line. */
 function unwrapBreaks(elements) {
@@ -24,6 +37,7 @@ function unwrapBreaks(elements) {
 export function normalizeSkeleton(elements) {
   if (!Array.isArray(elements)) return elements
   unwrapBreaks(elements)
+  applyFont(elements)
   if (elements.some(hasColor)) return elements
   for (const el of elements) {
     // Connectors keep the default stroke; colouring those reads as noise.

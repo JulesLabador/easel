@@ -9,11 +9,11 @@ const SLOW = { timeout: 180000 }
 const FLOW = 'graph TD\n  A[login] --> B[session]'
 
 describe('a font the SVG names but did not embed is not success', () => {
-  const withFont = 'font-family: Excalifont; src: url(data:font/woff2;base64,' + 'A'.repeat(200) + ')'
-  test('an Excalifont reference with no embedded face is rejected', () => {
-    assert.equal(fontsEmbedded('<svg><style>font-family: Excalifont</style></svg>'), false)
+  const withFont = 'font-family: Nunito; src: url(data:font/woff2;base64,' + 'A'.repeat(200) + ')'
+  test('a Nunito reference with no embedded face is rejected', () => {
+    assert.equal(fontsEmbedded('<svg><style>font-family: Nunito</style></svg>'), false)
   })
-  test('an Excalifont reference with a real embedded face passes', () => {
+  test('a Nunito reference with a real embedded face passes', () => {
     assert.equal(fontsEmbedded(`<svg><style>${withFont}</style></svg>`), true)
   })
   // A mermaid fallback names no custom family and must not be failed by this.

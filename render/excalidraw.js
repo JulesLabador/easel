@@ -6,6 +6,7 @@ import { access, readFile, readdir } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
+import { DIAGRAM_FONT } from './diagram-palette.js'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const BUNDLE = join(HERE, '.gen', 'excalidraw-bundle.js')
@@ -25,7 +26,7 @@ const CONTENT_TYPES = { woff2: 'font/woff2', js: 'text/javascript', css: 'text/c
 
 // The drawing font. The converter never mounts the editor, so nothing else ever
 // registers it and label widths would be measured against a system fallback.
-const DRAWING_FONT = 'Excalifont'
+const DRAWING_FONT = DIAGRAM_FONT.name
 
 /** Every subset, because the Latin metrics live in exactly one of them and which
     one is a build detail of the package. */
@@ -64,7 +65,8 @@ async function readAsset(rel) {
 /** An SVG naming a font it did not embed renders in whatever the reader
     substitutes, so treat a missing face as a failed conversion. */
 export function fontsEmbedded(svg) {
-  if (!/Excalifont/i.test(String(svg))) return true
+  // Excalifont too: saved whiteboard scenes can still carry the old default.
+  if (!/Excalifont|Nunito/i.test(String(svg))) return true
   return /url\(\s*data:font\/woff2;base64,[A-Za-z0-9+/=]{100,}/.test(String(svg))
 }
 
@@ -86,11 +88,11 @@ const PAGE_JOB = async (source, dark) => {
   }
 }
 
-/** Every diagram ships its own Excalifont subset; a shared family name would
+/** Every diagram ships its own font subset; a shared family name would
     let the last-inlined subset shadow the others' glyphs. */
 export function scopeFontFamily(svg, source) {
-  const scoped = 'Excalifont-' + createHash('sha1').update(source).digest('hex').slice(0, 8)
-  return svg.replaceAll('Excalifont', scoped)
+  const scoped = DRAWING_FONT + '-' + createHash('sha1').update(source).digest('hex').slice(0, 8)
+  return svg.replaceAll(DRAWING_FONT, scoped)
 }
 
 // Scene elements come from the editor already converted, so this skips the
